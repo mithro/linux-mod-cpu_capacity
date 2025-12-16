@@ -1,0 +1,78 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# CI workflow to build kernel module against multiple Debian releases
+#
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly build on Monday at 00:00 UTC to catch kernel header updates
+    - cron: '0 0 * * 1'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        debian:
+          - { name: "stable", image: "debian:bookworm" }
+          - { name: "testing", image: "debian:trixie" }
+          - { name: "unstable", image: "debian:sid" }
+
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.debian.image }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y build-essential linux-headers-amd64
+
+      - name: Find kernel headers version
+        id: kernel
+        run: |
+          KVER=$(ls /usr/src/ | grep -E '^linux-headers-[0-9]' | sort -V | tail -1 | sed 's/linux-headers-//')
+          echo "KVER=$KVER" >> $GITHUB_OUTPUT
+          echo "Found kernel headers: $KVER"
+
+      - name: Build module
+        run: |
+          make KDIR=/usr/src/linux-headers-${{ steps.kernel.outputs.KVER }}
+
+      - name: Verify module
+        run: |
+          echo "=== Module Info ==="
+          modinfo cpu_capacity_mod.ko
+          echo ""
+          echo "=== File Type ==="
+          file cpu_capacity_mod.ko
+
+      - name: Generate build info
+        run: |
+          modinfo cpu_capacity_mod.ko > modinfo.txt
+          cat > build-info.txt << EOF
+          Debian Release: ${{ matrix.debian.name }} (${{ matrix.debian.image }})
+          Kernel Headers: ${{ steps.kernel.outputs.KVER }}
+          Build Date: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+          Git Commit: ${{ github.sha }}
+          Git Branch: ${{ github.ref_name }}
+          EOF
+          echo "=== Build Info ==="
+          cat build-info.txt
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpu_capacity_mod-debian-${{ matrix.debian.name }}-${{ steps.kernel.outputs.KVER }}
+          path: |
+            cpu_capacity_mod.ko
+            modinfo.txt
+            build-info.txt

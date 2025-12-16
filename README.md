@@ -1,5 +1,7 @@
 # cpu_capacity_mod
 
+[![Build](https://github.com/mithro/linux-mod-cpu_capacity/actions/workflows/build.yml/badge.svg)](https://github.com/mithro/linux-mod-cpu_capacity/actions/workflows/build.yml)
+
 A Linux kernel module that allows runtime modification of CPU capacity values via sysfs.
 
 ## Overview

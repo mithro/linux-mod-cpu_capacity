@@ -1,0 +1,15 @@
+# Kernel module build artifacts
+*.o
+*.ko
+*.mod
+*.mod.c
+*.mod.o
+.*.cmd
+Module.symvers
+modules.order
+.module-common.o
+.tmp_versions/
+
+# Editor backups
+*~
+*.swp

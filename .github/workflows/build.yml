@@ -19,8 +19,8 @@ jobs:
       fail-fast: false
       matrix:
         debian:
-          - { name: "stable", image: "debian:bookworm" }
-          - { name: "testing", image: "debian:trixie" }
+          - { name: "stable", image: "debian:trixie" }
+          - { name: "testing", image: "debian:forky" }
           - { name: "unstable", image: "debian:sid" }
 
     runs-on: ubuntu-latest

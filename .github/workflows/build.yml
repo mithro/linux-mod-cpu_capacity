@@ -39,9 +39,14 @@ jobs:
       - name: Find kernel headers version
         id: kernel
         run: |
-          KVER=$(ls /usr/src/ | grep -E '^linux-headers-[0-9]' | sort -V | tail -1 | sed 's/linux-headers-//')
+          # List available headers (exclude -common, we need arch-specific like -amd64)
+          ls -la /usr/src/ | grep linux-headers
+          # Find the amd64-specific headers (has auto.conf, needed for build)
+          KVER=$(ls /usr/src/ | grep -E '^linux-headers-.*-amd64$' | sort -V | tail -1 | sed 's/linux-headers-//')
           echo "KVER=$KVER" >> $GITHUB_OUTPUT
           echo "Found kernel headers: $KVER"
+          # Verify auto.conf exists
+          ls -la /usr/src/linux-headers-$KVER/include/config/auto.conf
 
       - name: Build module
         run: |
